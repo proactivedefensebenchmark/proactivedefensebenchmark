@@ -1,0 +1,99 @@
+import torch
+import torch.nn as nn
+from .utils import *
+
+
+def lab_attack(wrapper, X_nat, epsilon=0.05, lr=1e-4, steps=100, ref=None):
+    device = X_nat.device
+    criterion = nn.MSELoss().to(device)
+    
+    # ⚡ Ensure wrapper is in eval mode and clear all states
+    if hasattr(wrapper, 'eval'):
+        wrapper.eval()
+    if hasattr(wrapper, 'zero_grad'):
+        wrapper.zero_grad()
+    
+    # ⚡ Clear any cached gradients in PyTorch
+    torch.cuda.empty_cache() if torch.cuda.is_available() else None
+    
+    pert_a = torch.zeros(
+        X_nat.shape[0], 2, X_nat.shape[2], X_nat.shape[3],
+        device=device, requires_grad=True
+    )
+    optimizer = torch.optim.Adam([pert_a], lr=lr, betas=(0.9, 0.999))
+    
+    X = denorm(X_nat.clone())
+    
+    with torch.no_grad():
+        encoded_src = wrapper.encode(X_nat)
+        decoded_src = wrapper.decode(encoded_src, ref=ref)
+    
+    X_new = None
+    
+    for i in range(steps):
+        X_lab = rgb2lab(X).to(device)
+        
+        pert = torch.clamp(pert_a, min=-epsilon, max=epsilon)
+        X_lab[:, 1:, :, :] = X_lab[:, 1:, :, :] + pert
+        
+        X_new = norm(lab2rgb(X_lab))
+        
+        # ⚡ Check for NaN/Inf
+        if torch.isnan(X_new).any() or torch.isinf(X_new).any():
+            print(f"⚠️  NaN/Inf detected at step {i+1}, stopping early")
+            break
+        
+        # ⚡ Clamp to valid range to prevent extreme values
+        X_new = torch.clamp(X_new, min=-1, max=1)
+        
+        print(f"Step {i+1}/{steps}, Adv Tensor Range: {X_new.min().item():.4f} ~ {X_new.max().item():.4f}")
+        
+        # ⚡ Detach X_new before encoding to break gradient flow to wrapper
+        X_new_detached = X_new.detach().requires_grad_(True)
+        
+        encoded_adv = wrapper.encode(X_new_detached)
+        decoded_adv = wrapper.decode(encoded_adv, ref=ref)
+        
+        # ⚡ Detach decoded outputs to prevent gradient accumulation in wrapper
+        decoded_adv = decoded_adv.detach()
+        
+        loss = -criterion(decoded_adv, decoded_src.detach())
+        
+        # ⚡ Check for NaN loss
+        if torch.isnan(loss).any() or torch.isinf(loss).any():
+            print(f"⚠️  NaN/Inf loss detected at step {i+1}, stopping early")
+            break
+        
+        optimizer.zero_grad()
+        loss.backward()
+        
+        # ⚡ Get gradient from X_new_detached and transfer to pert_a
+        if X_new_detached.grad is not None:
+            # Compute gradient w.r.t. perturbation in Lab space
+            X_lab.backward(X_new_detached.grad)
+        
+        # ⚡ Gradient clipping to prevent explosion
+        if pert_a.grad is not None:
+            torch.nn.utils.clip_grad_norm_([pert_a], max_norm=1.0)
+            
+            # ⚡ Check for NaN gradients
+            if torch.isnan(pert_a.grad).any() or torch.isinf(pert_a.grad).any():
+                print(f"⚠️  NaN/Inf gradient detected at step {i+1}, stopping early")
+                break
+        
+        optimizer.step()
+        
+        # ⚡ Clear wrapper gradients after each step to prevent accumulation
+        if hasattr(wrapper, 'zero_grad'):
+            wrapper.zero_grad()
+    
+    # ⚡ Final safety check
+    if X_new is None or torch.isnan(X_new).any() or torch.isinf(X_new).any():
+        print("⚠️  Returning original input due to numerical instability")
+        X_new = X_nat
+    
+    # ⚡ Clear all gradients from wrapper before returning
+    if hasattr(wrapper, 'zero_grad'):
+        wrapper.zero_grad()
+    
+    return X_new.detach()
