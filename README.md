@@ -253,22 +253,4 @@ match the on-disk artifacts to the corresponding stage.
 
 ---
 
-## 4. Repository layout
-
-```
-attacks/                Batch attack runners (batch_pgd_attack.py, batch_df_rap_attack.py, …)
-configs/                paths_config.py — single source of truth for dataset / checkpoint roots
-datasets/               Source + target images per dataset (NOT committed — download via Drive)
-deepfake_generators/    Upstream generator code (clone separately, see §1.3)
-disrupting_methods/     Reference implementations of the proactive defenses
-evaluation/             evaluate_disruption.py / evaluate_id.py / evaluate_robustness.py / …
-wrappers/               Common (x_src, x_tgt) → decoded interface for every generator
-utils/                  Shared helpers
-white_box_attack.py / robustness.py / transferability.py             # attack stage launchers
-white_box_evaluation.py / robustness_evaluation.py / transferability_evaluation.py   # scoring
-run.sh                  End-to-end smoke test
-```
-
----
-
-## 5. Citation
+## 4. Citation
