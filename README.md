@@ -13,7 +13,7 @@ The pipeline has three stages, each with a paired launcher and evaluator:
 |---|---|---|---|
 | White-box | `white_box_attack.py` | `white_box_evaluation.py` | Run PGD / Disrupting / DF-RAP / Anti-Forgery / LEAT against each deepfake generator and score the protected outputs. |
 | Robustness | `robustness.py` | `robustness_evaluation.py` | Apply JPEG / blur / noise / salt-and-pepper to the protected images, then re-render and aggregate **ROB**. |
-| Transferability | `transferability.py` | `transferability_evaluation.py` | Cross-feed perturbations crafted on a source generator into every other target generator and aggregate **TE**. |
+| Transferability | `transferability.py` | `transferability_evaluation.py` | Apply perturbations crafted against a source generator to every other target generator and aggregate **TE**. |
 
 `run.sh` chains all six scripts end-to-end with a minimal example configuration.
 
