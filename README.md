@@ -52,9 +52,9 @@ datasets/
 
 | Dataset | Google Drive |
 |---|---|
-| CelebA-HQ | `https://drive.google.com/file/d/1WbDoqu7HU5TjPFI3AhHI3kfuDblsfLTZ/view?usp=share_link` |
-| FFHQ | `https://drive.google.com/file/d/1KXBhkjX8X_gMTW25iQSJWv58KXr6SJ13/view?usp=share_link` |
-| VGGFace2-HQ | `https://drive.google.com/file/d/1BuboHLC_hRul0ASbDLxSZA0ljk_WAfcs/view?usp=share_link` |
+| CelebA-HQ | https://drive.google.com/file/d/1WbDoqu7HU5TjPFI3AhHI3kfuDblsfLTZ/view?usp=share_link |
+| FFHQ | https://drive.google.com/file/d/1KXBhkjX8X_gMTW25iQSJWv58KXr6SJ13/view?usp=share_link |
+| VGGFace2-HQ | https://drive.google.com/file/d/1BuboHLC_hRul0ASbDLxSZA0ljk_WAfcs/view?usp=share_link |
 
 `configs/paths_config.py` resolves these locations via the `DATASETS` table
 (`celeba` / `ffhq` / `vggface2hq`); you do not need to touch it unless you
@@ -114,7 +114,7 @@ deepfake_generators/
 
 | Checkpoint | Google Drive |
 |---|---|
-| ArcFace (`model_ir_se50.pth`) | `https://drive.google.com/file/d/12jmxzEELXcMmFSSrSr98wM-Q51Zl11nc/view?usp=share_link' |
+| ArcFace (`model_ir_se50.pth`) | https://drive.google.com/file/d/12jmxzEELXcMmFSSrSr98wM-Q51Zl11nc/view?usp=share_link |
 
 `configs/paths_config.py` resolves this via `ARCFACE_CKPT`; you do not need to
 touch it unless you relocate the checkpoint.
